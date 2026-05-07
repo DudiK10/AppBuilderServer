@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>App Builder — פאנל בנייה פרימיום</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Assistant:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Assistant', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+  </head>
+
+  <body
+    class="min-h-screen bg-[#0B0F19] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#0B0F19] to-black text-slate-100 antialiased selection:bg-indigo-500/30"
+  >
+    <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:py-12">
+      <header class="mb-12 text-center lg:mb-16">
+        <div
+          class="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 via-purple-500 to-violet-600 shadow-[0_0_40px_-10px_rgba(99,102,241,0.5)] ring-1 ring-white/10"
+        >
+          <svg class="h-8 w-8 text-white drop-shadow-md" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="1.5"
+              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+            />
+          </svg>
+        </div>
+        <h1
+          class="bg-gradient-to-r from-white to-slate-400 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl"
+        >
+          App Factory Studio
+        </h1>
+        <p class="mt-3 text-sm font-medium text-slate-400/80">מנוע בניית אפליקציות חכם • סנכרון חי ל-EAS</p>
+      </header>
+
+      <div class="flex flex-col gap-10 lg:grid lg:grid-cols-12 lg:items-start lg:gap-12 xl:gap-20">
+        <div class="min-w-0 lg:col-span-7">
+          <main
+            class="relative rounded-3xl border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-xl sm:p-10"
+          >
+            <div class="absolute -right-24 -top-24 -z-10 h-64 w-64 rounded-full bg-indigo-500/10 blur-[80px]"></div>
+
+            <div class="mb-8 flex items-center justify-between">
+              <h2 class="text-xl font-bold text-white">הגדרות האפליקציה</h2>
+              <span
+                class="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-400 ring-1 ring-indigo-500/20"
+                >v2.0 Beta</span
+              >
+            </div>
+
+            <form id="build-form" class="space-y-4">
+              <details
+                class="group overflow-hidden rounded-2xl border border-white/5 bg-white/[0.01] transition-all duration-300 open:border-white/10 open:bg-white/[0.03] open:shadow-lg"
+                open
+              >
+                <summary
+                  class="flex cursor-pointer list-none items-center justify-between gap-3 p-5 text-sm font-semibold text-slate-200 outline-none transition hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 [&::-webkit-details-marker]:hidden"
+                >
+                  <div class="flex items-center gap-3">
+                    <div
+                      class="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-400"
+                    >
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                        ></path>
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <span>הגדרות בסיס</span>
+                  </div>
+                  <svg
+                    class="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-300 group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="space-y-5 border-t border-white/5 p-5 pt-2">
+                  <div>
+                    <label for="appName" class="mb-2 block text-sm font-medium text-slate-400">שם האפליקציה</label>
+                    <input
+                      id="appName"
+                      name="appName"
+                      type="text"
+                      required
+                      placeholder="לדוגמה: מספרה דוד"
+                      class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-black/60 focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                  </div>
+
+                  <div>
+                    <label for="businessNameInput" class="mb-2 block text-sm font-medium text-slate-400"
+                      >שם העסק (לתצוגה ללא לוגו)</label
+                    >
+                    <input
+                      id="businessNameInput"
+                      name="businessName"
+                      type="text"
+                      placeholder="לדוגמה: מספרת דודי"
+                      class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-black/60 focus:ring-4 focus:ring-indigo-500/10"
+                    />
+                  </div>
+
+                  <div class="grid grid-cols-1 gap-5 sm:grid-cols-2">
+                    <div>
+                      <label for="tenantId" class="mb-2 block text-sm font-medium text-slate-400"
+                        >מזהה העסק (Tenant ID)</label
+                      >
+                      <input
+                        id="tenantId"
+                        name="tenantId"
+                        type="text"
+                        required
+                        placeholder="לדוגמה: 12345"
+                        class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-black/60 focus:ring-4 focus:ring-indigo-500/10"
+                      />
+                    </div>
+                    <div>
+                      <label for="bundleId" class="mb-2 block text-sm font-medium text-slate-400"
+                        >מזהה חבילה (Bundle ID)</label
+                      >
+                      <input
+                        id="bundleId"
+                        name="bundleId"
+                        type="text"
+                        required
+                        placeholder="com.example.app"
+                        dir="ltr"
+                        class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3.5 font-mono text-sm text-slate-100 outline-none transition-all duration-200 placeholder:text-slate-600 focus:border-indigo-500/50 focus:bg-black/60 focus:ring-4 focus:ring-indigo-500/10"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label for="businessType" class="mb-2 block text-sm font-medium text-slate-400">סוג עסק</label>
+                    <div class="relative">
+                      <select
+                        id="businessType"
+                        name="businessType"
+                        required
+                        class="w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/40 py-3.5 pl-10 pr-4 text-slate-100 outline-none transition-all duration-200 focus:border-indigo-500/50 focus:bg-black/60 focus:ring-4 focus:ring-indigo-500/10"
+                      >
+                        <option value="barber">מספרה (Barbershop)</option>
+                        <option value="cosmetician">קליניקת קוסמטיקה</option>
+                      </select>
+                      <span
+                        class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 9l4-4 4 4m0 6l-4 4-4-4"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <details
+                class="group overflow-hidden rounded-2xl border border-white/5 bg-white/[0.01] transition-all duration-300 open:border-white/10 open:bg-white/[0.03] open:shadow-lg"
+              >
+                <summary
+                  class="flex cursor-pointer list-none items-center justify-between gap-3 p-5 text-sm font-semibold text-slate-200 outline-none transition hover:text-white focus-visible:ring-2 focus-visible:ring-indigo-500 [&::-webkit-details-marker]:hidden"
+                >
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-pink-500/20 text-pink-400">
+                      <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"
+                        ></path>
+                      </svg>
+                    </div>
+                    <span>אייקון, לוגו וערכת עיצוב</span>
+                  </div>
+                  <svg
+                    class="h-5 w-5 shrink-0 text-slate-500 transition-transform duration-300 group-open:rotate-180"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </summary>
+                <div class="space-y-6 border-t border-white/5 p-5 pt-2">
+                  <div class="rounded-xl border border-white/5 bg-black/20 p-4">
+                    <label for="appIcon" class="mb-2 block text-sm font-medium text-slate-300"
+                      >אייקון האפליקציה לחנויות</label
+                    >
+                    <input
+                      id="appIcon"
+                      name="appIcon"
+                      type="file"
+                      accept="image/png"
+                      required
+                      class="block w-full cursor-pointer text-sm text-slate-400 file:me-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-indigo-400 file:transition-colors hover:file:bg-indigo-500/30 focus:outline-none"
+                    />
+                    <div
+                      class="mt-3 flex items-start gap-2 rounded-lg bg-amber-500/10 p-3 text-amber-200/90 ring-1 ring-amber-500/20"
+                    >
+                      <svg class="mt-0.5 h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          stroke-width="2"
+                          d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                        ></path>
+                      </svg>
+                      <p class="text-[13px] leading-relaxed">
+                        חובה: תמונה מרובעת 1024x1024.
+                        <strong class="font-bold text-amber-400">ללא רקע שקוף</strong> (אפל הופכת שקיפות לשחור אטום).
+                      </p>
+                    </div>
+                  </div>
+
+                  <div class="rounded-xl border border-white/5 bg-black/20 p-4">
+                    <div class="mb-2 flex items-center justify-between">
+                      <label for="logoInput" class="block text-sm font-medium text-slate-300"
+                        >לוגו מסך פתיחה (אופציונלי)</label
+                      >
+                      <button
+                        type="button"
+                        id="clearLogoBtn"
+                        class="hidden text-xs font-medium text-rose-400 hover:text-rose-300 hover:underline"
+                      >
+                        הסר לוגו &#10006;
+                      </button>
+                    </div>
+                    <input
+                      id="logoInput"
+                      name="loginLogo"
+                      type="file"
+                      accept="image/png"
+                      class="block w-full cursor-pointer text-sm text-slate-400 file:me-4 file:cursor-pointer file:rounded-lg file:border-0 file:bg-slate-700/50 file:px-4 file:py-2.5 file:text-sm file:font-semibold file:text-slate-300 file:transition-colors hover:file:bg-slate-700 focus:outline-none"
+                    />
+
+                    <div
+                      class="mt-4 flex flex-col gap-2 border-t border-white/5 pt-4 text-[13px] text-slate-400 sm:flex-row sm:items-center sm:gap-4"
+                    >
+                      <a
+                        href="https://www.canva.com/he_il/create/logos/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center gap-1.5 text-emerald-400 transition hover:text-emerald-300 hover:underline"
+                      >
+                        <span aria-hidden="true">&#10024;</span> עיצוב לוגו ב-Canva
+                      </a>
+                      <span class="hidden text-slate-700 sm:inline">•</span>
+                      <a
+                        href="https://www.adobe.com/express/feature/image/remove-background"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="flex items-center gap-1.5 text-blue-400 transition hover:text-blue-300 hover:underline"
+                      >
+                        <span aria-hidden="true">&#9986;&#65039;</span> הסרת רקע חינמית (Adobe)
+                      </a>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label for="appTheme" class="mb-2 block text-sm font-medium text-slate-400"
+                      >ערכת עיצוב (Theme)</label
+                    >
+                    <div class="relative">
+                      <select
+                        id="appTheme"
+                        name="theme"
+                        required
+                        class="w-full cursor-pointer appearance-none rounded-xl border border-white/10 bg-black/40 py-3.5 pl-10 pr-4 text-slate-100 outline-none transition-all duration-200 focus:border-indigo-500/50 focus:bg-black/60 focus:ring-4 focus:ring-indigo-500/10"
+                      >
+                        <option value="classic">קלאסי מודרני (מונוכרומטי נקי)</option>
+                        <option value="dark_gold">פרימיום דארק (שחור וזהב יוקרתי)</option>
+                        <option value="nude">ביוטי ניוד (קרם ורוז-גולד)</option>
+                      </select>
+                      <span
+                        class="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"
+                        aria-hidden="true"
+                      >
+                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 9l4-4 4 4m0 6l-4 4-4-4"
+                          />
+                        </svg>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </details>
+
+              <div class="mt-8 pt-4">
+                <button
+                  type="submit"
+                  id="submit-btn"
+                  class="group relative flex w-full items-center justify-center gap-3 overflow-hidden rounded-xl bg-indigo-500 px-4 py-4 text-sm font-bold text-white transition-all duration-300 hover:bg-indigo-400 hover:shadow-[0_0_20px_rgba(99,102,241,0.4)] focus:outline-none focus:ring-4 focus:ring-indigo-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <div
+                    class="absolute inset-0 flex h-full w-full justify-center [transform:skew(-12deg)_translateX(-100%)] group-hover:duration-1000 group-hover:[transform:skew(-12deg)_translateX(100%)]"
+                  >
+                    <div class="relative h-full w-8 bg-white/20"></div>
+                  </div>
+                  <span id="btn-label" class="relative">התחל בניית אפליקציה</span>
+                  <svg
+                    id="btn-spinner"
+                    class="hidden h-5 w-5 animate-spin text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </form>
+
+            <div
+              id="alert"
+              role="alert"
+              class="mt-6 hidden rounded-xl border px-4 py-3.5 text-sm font-medium backdrop-blur-sm"
+            ></div>
+          </main>
+        </div>
+
+        <div class="flex w-full flex-col items-center justify-start lg:col-span-5 lg:sticky lg:top-12">
+          <div
+            class="mb-6 flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-1.5 backdrop-blur-md"
+          >
+            <span class="relative flex h-2.5 w-2.5">
+              <span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500"></span>
+            </span>
+            <span class="text-xs font-semibold tracking-wide text-slate-300">תצוגה מקדימה בזמן אמת</span>
+          </div>
+
+          <div
+            class="relative mx-auto shrink-0 transition-transform duration-500 hover:scale-[1.02]"
+            style="width: calc(414px * 0.75); height: calc(868px * 0.75)"
+          >
+            <div class="absolute left-1/2 top-0 origin-top -translate-x-1/2 scale-[0.75]">
+              <div
+                class="relative box-border h-[868px] w-[414px] overflow-hidden rounded-[3.5rem] border-[12px] border-slate-900 bg-slate-900 shadow-[0_0_0_1px_rgba(255,255,255,0.1),0_40px_80px_-15px_rgba(0,0,0,0.8)] ring-1 ring-white/10"
+              >
+                <div
+                  class="absolute left-1/2 top-4 z-20 flex h-7 w-32 -translate-x-1/2 items-center justify-between rounded-full bg-black px-2 shadow-inner"
+                >
+                  <div
+                    class="h-2.5 w-2.5 rounded-full bg-[#0a0a0a] shadow-[inset_0px_0px_2px_rgba(255,255,255,0.1)]"
+                  ></div>
+                  <div class="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-900/30">
+                    <div class="h-1.5 w-1.5 rounded-full bg-blue-500/50"></div>
+                  </div>
+                </div>
+
+                <div class="h-full w-full overflow-hidden rounded-[2.5rem] bg-black">
+                  <iframe
+                    id="app-preview"
+                    src="http://localhost:8081"
+                    class="h-full w-full border-0"
+                    title="תצוגה מקדימה"
+                  ></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      (function () {
+        const THEME_TO_PRESET = {
+          classic: 'classic_modern',
+          dark_gold: 'premium_dark',
+          nude: 'beauty_nude',
+        };
+
+        let currentLogoBase64 = null;
+        /** נשלח לשרת — מחיקת login-logo.png (לוגו פנימי בלבד) */
+        let userRemovedLoginLogo = false;
+
+        const form = document.getElementById('build-form');
+        const alertEl = document.getElementById('alert');
+        const submitBtn = document.getElementById('submit-btn');
+        const btnLabel = document.getElementById('btn-label');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const appNameInput = document.getElementById('appName');
+        const businessNameInput = document.getElementById('businessNameInput');
+        const tenantIdInput = document.getElementById('tenantId');
+        const bundleIdInput = document.getElementById('bundleId');
+        const themeSelect = document.getElementById('appTheme');
+        const businessTypeSelect = document.getElementById('businessType');
+        const appIconInput = document.getElementById('appIcon');
+        const logoInput = document.getElementById('logoInput');
+        const clearLogoBtn = document.getElementById('clearLogoBtn');
+        const appPreviewFrame = document.getElementById('app-preview');
+
+        function pushPreviewToIframe() {
+          var appName = appNameInput.value.trim();
+          var businessName = businessNameInput ? businessNameInput.value.trim() : '';
+          var businessType = businessTypeSelect.value;
+          var brandPreset = THEME_TO_PRESET[themeSelect.value] || 'classic_modern';
+          var logoUri = currentLogoBase64;
+          var win = appPreviewFrame && appPreviewFrame.contentWindow;
+          if (win) {
+            win.postMessage(
+              {
+                type: 'UPDATE_PREVIEW',
+                payload: {
+                  brandPreset,
+                  appName,
+                  businessName,
+                  businessType,
+                  logoUri,
+                },
+              },
+              '*'
+            );
+          }
+        }
+
+        function syncLogoUi() {
+          var hasFile = !!(logoInput && logoInput.files && logoInput.files.length > 0);
+          var hasData = currentLogoBase64 != null && String(currentLogoBase64).length > 0;
+          if (clearLogoBtn) {
+            if (hasFile || hasData) {
+              clearLogoBtn.classList.remove('hidden');
+            } else {
+              clearLogoBtn.classList.add('hidden');
+            }
+          }
+        }
+
+        appIconInput.addEventListener('change', function () {
+          pushPreviewToIframe();
+        });
+
+        if (logoInput) {
+          logoInput.addEventListener('change', function () {
+            userRemovedLoginLogo = false;
+            if (!logoInput.files || logoInput.files.length === 0) {
+              currentLogoBase64 = null;
+              syncLogoUi();
+              pushPreviewToIframe();
+              return;
+            }
+            syncLogoUi();
+            var reader = new FileReader();
+            reader.onload = function () {
+              currentLogoBase64 = reader.result;
+              syncLogoUi();
+              pushPreviewToIframe();
+            };
+            reader.onerror = function () {
+              currentLogoBase64 = null;
+              syncLogoUi();
+              pushPreviewToIframe();
+            };
+            reader.readAsDataURL(logoInput.files[0]);
+          });
+        }
+
+        if (clearLogoBtn && logoInput) {
+          clearLogoBtn.addEventListener('click', function () {
+            logoInput.value = '';
+            currentLogoBase64 = null;
+            userRemovedLoginLogo = true;
+            syncLogoUi();
+            pushPreviewToIframe();
+          });
+        }
+
+        function bindLive(el, events) {
+          events.forEach(function (ev) {
+            el.addEventListener(ev, function () {
+              pushPreviewToIframe();
+            });
+          });
+        }
+
+        bindLive(appNameInput, ['input', 'change']);
+        if (businessNameInput) {
+          bindLive(businessNameInput, ['input', 'change']);
+        }
+        bindLive(tenantIdInput, ['input', 'change']);
+        bindLive(bundleIdInput, ['input', 'change']);
+        bindLive(themeSelect, ['input', 'change']);
+        bindLive(businessTypeSelect, ['input', 'change']);
+
+        function showAlert(type, message) {
+          alertEl.classList.remove('hidden', 'border-emerald-500/50', 'bg-emerald-950/50', 'text-emerald-200');
+          alertEl.classList.remove('border-red-500/50', 'bg-red-950/50', 'text-red-200');
+          if (type === 'success') {
+            alertEl.classList.add('border-emerald-500/50', 'bg-emerald-950/50', 'text-emerald-200');
+          } else {
+            alertEl.classList.add('border-red-500/50', 'bg-red-950/50', 'text-red-200');
+          }
+          alertEl.textContent = message;
+        }
+
+        function setLoading(loading) {
+          submitBtn.disabled = loading;
+          btnSpinner.classList.toggle('hidden', !loading);
+          btnLabel.textContent = loading ? 'שולח…' : 'התחל בניית אפליקציה';
+        }
+
+        function buildBusinessConfigPayload(tenantId) {
+          return {
+            tenant_id: tenantId,
+            businessName: businessNameInput ? businessNameInput.value.trim() : '',
+            businessType: businessTypeSelect.value,
+            brandPreset: THEME_TO_PRESET[themeSelect.value] || 'classic_modern',
+            logoUri: currentLogoBase64 || null,
+          };
+        }
+
+        appPreviewFrame.addEventListener('load', pushPreviewToIframe);
+        syncLogoUi();
+        pushPreviewToIframe();
+
+        form.addEventListener('submit', async function (e) {
+          e.preventDefault();
+          alertEl.classList.add('hidden');
+
+          if (!appIconInput.files || appIconInput.files.length === 0) {
+            alert(
+              'שגיאה: חובה להעלות לוגו/אייקון אפליקציה כדי לייצר את קובצי ההתקנה לחנויות.'
+            );
+            return;
+          }
+
+          var tenantId = tenantIdInput.value.trim();
+          var bizPayload = buildBusinessConfigPayload(tenantId);
+
+          setLoading(true);
+          try {
+            var createRes = await fetch('/api/create_business.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(bizPayload),
+            });
+            var createData = await createRes.json().catch(function () {
+              return {};
+            });
+
+            if (createRes.status === 409) {
+              var updRes = await fetch('/api/update_business_config.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bizPayload),
+              });
+              var updData = await updRes.json().catch(function () {
+                return {};
+              });
+              if (!updRes.ok) {
+                showAlert(
+                  'error',
+                  updData.message || 'עדכון עסק נכשל (' + updRes.status + ')'
+                );
+                return;
+              }
+            } else if (!createRes.ok) {
+              showAlert(
+                'error',
+                createData.message || 'יצירת עסק נכשלה (' + createRes.status + ')'
+              );
+              return;
+            }
+
+            var formData = new FormData();
+            formData.append('appName', appNameInput.value.trim());
+            formData.append(
+              'businessName',
+              businessNameInput ? businessNameInput.value.trim() : ''
+            );
+            formData.append('tenantId', tenantId);
+            formData.append('bundleId', bundleIdInput.value.trim());
+            formData.append('brandPreset', THEME_TO_PRESET[themeSelect.value] || 'classic_modern');
+            formData.append('businessType', businessTypeSelect.value);
+
+            if (appIconInput.files && appIconInput.files.length > 0) {
+              formData.append('appIcon', appIconInput.files[0]);
+            }
+            if (logoInput && logoInput.files && logoInput.files.length > 0) {
+              formData.append('loginLogo', logoInput.files[0]);
+            } else if (userRemovedLoginLogo) {
+              formData.append('removeLogo', '1');
+            }
+
+            var res = await fetch('/api/build-app', {
+              method: 'POST',
+              body: formData,
+            });
+            var data = await res.json().catch(function () {
+              return {};
+            });
+
+            if (!res.ok) {
+              showAlert('error', data.message || 'הבקשה נכשלה (' + res.status + ')');
+              return;
+            }
+
+            if (data.status === 'success') {
+              userRemovedLoginLogo = false;
+              showAlert(
+                'success',
+                'הבנייה החלה ב-EAS. מזהה עסק: ' + (data.tenantId || tenantId) + '. ' + (data.message || '')
+              );
+            } else {
+              showAlert('error', data.message || 'תגובה לא צפויה מהשרת');
+            }
+          } catch (err) {
+            showAlert('error', 'שגיאת רשת — ודא שהשרת פועל.');
+          } finally {
+            setLoading(false);
+          }
+        });
+      })();
+    </script>
+  </body>
+</html>

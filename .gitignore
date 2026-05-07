@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Secrets & local env (never commit real tokens)
+.env
+.env.*
+!.env.example
+
+# Logs & debug
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+
+# Optional: local Expo app output / tooling (uncomment if you add expo-app to this repo)
+# expo-app/node_modules/
+# expo-app/.expo/
