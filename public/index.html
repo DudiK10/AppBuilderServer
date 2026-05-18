@@ -1057,6 +1057,20 @@
           res.className = 'hidden rounded-xl border px-4 py-3 text-sm font-medium';
         },
 
+        _syncImageHiddenFields: function () {
+          // Keep image-URL hidden fields in sync with the authoritative in-memory state
+          // (activeClient) immediately before every save, so a save that fires while an
+          // async upload is still in-flight never sends a stale/empty URL.
+          if (!activeClient) return;
+          var f = document.getElementById('detail-form');
+          if (!f) return;
+          var fields = ['logo_url', 'bg_image_url'];
+          fields.forEach(function (name) {
+            var el = f.elements[name];
+            if (el) el.value = activeClient[name] || '';
+          });
+        },
+
         _collectData: function () {
           var data = {};
           new FormData(document.getElementById('detail-form')).forEach(function (v, k) { data[k] = v; });
@@ -1074,6 +1088,7 @@
           if (activeLabel === 'draft' && draftLbl) draftLbl.textContent = 'שומר...';
           if (activeLabel === 'build' && buildLbl) buildLbl.textContent = 'שומר...';
 
+          Detail._syncImageHiddenFields();
           var data = Detail._collectData();
           data.status = status;
 
@@ -1124,6 +1139,7 @@
           if (buildBtn) buildBtn.disabled = true;
           if (buildLbl) buildLbl.textContent = 'שומר...';
 
+          Detail._syncImageHiddenFields();
           var data = Detail._collectData();
           data.status = 'live';
 
@@ -1293,11 +1309,20 @@
               var frame = document.getElementById('detail-preview');
               if (frame && activeClient) frame.src = PREVIEW_URL + '?tenant_id=' + encodeURIComponent(activeClient.tenant_id) + '&_r=' + Date.now();
             } else {
+              // Upload failed — clear local preview so user sees the failure
+              var logoThumb = document.getElementById('detail-logo-thumb');
+              if (logoThumb) logoThumb.style.display = 'none';
+              var logoImg = document.getElementById('detail-logo-img');
+              if (logoImg) logoImg.src = '';
               Detail.showResult('error', '✗ ' + (json.message || 'שגיאה בהעלאת הלוגו'));
               var lbl = document.getElementById('detail-logo-label');
               if (lbl) lbl.textContent = 'העלה לוגו (PNG / JPG)';
             }
           } catch (_) {
+            var logoThumb = document.getElementById('detail-logo-thumb');
+            if (logoThumb) logoThumb.style.display = 'none';
+            var logoImg = document.getElementById('detail-logo-img');
+            if (logoImg) logoImg.src = '';
             Detail.showResult('error', '✗ שגיאת רשת בהעלאת הלוגו');
             var lbl = document.getElementById('detail-logo-label');
             if (lbl) lbl.textContent = 'העלה לוגו (PNG / JPG)';
@@ -1403,11 +1428,20 @@
               var frame = document.getElementById('detail-preview');
               if (frame && activeClient) frame.src = PREVIEW_URL + '?tenant_id=' + encodeURIComponent(activeClient.tenant_id) + '&_r=' + Date.now();
             } else {
+              // Upload failed — clear the local preview so the failure is visible
+              var bgThumb = document.getElementById('detail-bg-thumb');
+              if (bgThumb) bgThumb.style.display = 'none';
+              var bgImg = document.getElementById('detail-bg-img');
+              if (bgImg) bgImg.src = '';
               Detail.showResult('error', '✗ ' + (json.message || 'שגיאה בהעלאת הרקע'));
               var lbl = document.getElementById('detail-bg-label');
               if (lbl) lbl.textContent = 'העלה תמונת רקע (JPG / PNG)';
             }
           } catch (_) {
+            var bgThumb = document.getElementById('detail-bg-thumb');
+            if (bgThumb) bgThumb.style.display = 'none';
+            var bgImg = document.getElementById('detail-bg-img');
+            if (bgImg) bgImg.src = '';
             Detail.showResult('error', '✗ שגיאת רשת בהעלאת הרקע');
             var lbl = document.getElementById('detail-bg-label');
             if (lbl) lbl.textContent = 'העלה תמונת רקע (JPG / PNG)';
