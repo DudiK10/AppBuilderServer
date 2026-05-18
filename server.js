@@ -1376,12 +1376,20 @@ app.put('/api/clients/:id', async (req, res) => {
   const blurInt = parseInt(body.bg_blur_intensity ?? '', 10);
   const blurVal = Number.isFinite(blurInt) ? Math.min(100, Math.max(0, blurInt)) : 22;
 
+  // Fields that always have form inputs — always overwrite.
+  // Fields without visible inputs (about_us_text, social, etc.) use COALESCE so a missing
+  // or null payload value never silently wipes the existing DB value.
   const setClauses = [
     'business_name=?', 'business_type=?', 'client_name=?', 'phone=?', 'notes=?',
     'app_description_short=?', 'app_description_long=?', 'keywords=?',
     'brand_preset=?', 'logo_url=?', 'bg_image_url=?', 'bg_blur_intensity=?',
-    'about_us_text=?', 'business_address=?',
-    'social_instagram=?', 'social_facebook=?', 'social_tiktok=?', 'social_website=?', 'social_whatsapp=?',
+    'about_us_text    = COALESCE(NULLIF(?,\'\'), about_us_text)',
+    'business_address = COALESCE(NULLIF(?,\'\'), business_address)',
+    'social_instagram = COALESCE(NULLIF(?,\'\'), social_instagram)',
+    'social_facebook  = COALESCE(NULLIF(?,\'\'), social_facebook)',
+    'social_tiktok    = COALESCE(NULLIF(?,\'\'), social_tiktok)',
+    'social_website   = COALESCE(NULLIF(?,\'\'), social_website)',
+    'social_whatsapp  = COALESCE(NULLIF(?,\'\'), social_whatsapp)',
     'updated_at=NOW()',
   ];
   const values = [
@@ -1390,9 +1398,10 @@ app.put('/api/clients/:id', async (req, res) => {
     ns(body.app_description_short), ns(body.app_description_long), ns(body.keywords),
     ns(body.brand_preset) || 'classic_modern',
     ns(body.logo_url), ns(body.bg_image_url), blurVal,
-    ns(body.about_us_text), ns(body.business_address),
+    // For COALESCE fields pass the raw (possibly null) value — NULLIF handles empty strings
+    ns(body.about_us_text),  ns(body.business_address),
     ns(body.social_instagram), ns(body.social_facebook), ns(body.social_tiktok),
-    ns(body.social_website), ns(body.social_whatsapp),
+    ns(body.social_website),   ns(body.social_whatsapp),
   ];
 
   if (body.status && VALID_STATUSES.includes(body.status)) {

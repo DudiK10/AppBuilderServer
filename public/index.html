@@ -422,10 +422,22 @@
           <div class="lg:col-span-7">
             <form id="detail-form" class="space-y-4">
 
-              <!-- Hidden fields — carry DB values that have no visible input in this form -->
-              <input type="hidden" name="bg_image_url"     id="detail-bg-image-url-hidden"/>
-              <input type="hidden" name="bg_blur_intensity" id="detail-bg-blur-hidden"/>
-              <input type="hidden" name="business_type"    id="detail-business-type-hidden"/>
+              <!-- Hidden fields — carry every DB column that has no visible input in this form.
+                   _collectData() uses FormData which only picks up named inputs that exist in
+                   the DOM; any missing field arrives at PUT /api/clients/:id as undefined →
+                   ns(undefined) = null → the column is silently wiped on every save.
+                   All fields listed here are populated by populate() from the live DB row. -->
+              <input type="hidden" name="bg_image_url"      id="detail-bg-image-url-hidden"/>
+              <input type="hidden" name="bg_blur_intensity"  id="detail-bg-blur-hidden"/>
+              <input type="hidden" name="business_type"      id="detail-business-type-hidden"/>
+              <input type="hidden" name="about_us_text"      id="detail-about-us-hidden"/>
+              <input type="hidden" name="business_phone"     id="detail-business-phone-hidden"/>
+              <input type="hidden" name="business_address"   id="detail-business-address-hidden"/>
+              <input type="hidden" name="social_instagram"   id="detail-social-instagram-hidden"/>
+              <input type="hidden" name="social_facebook"    id="detail-social-facebook-hidden"/>
+              <input type="hidden" name="social_tiktok"      id="detail-social-tiktok-hidden"/>
+              <input type="hidden" name="social_website"     id="detail-social-website-hidden"/>
+              <input type="hidden" name="social_whatsapp"    id="detail-social-whatsapp-hidden"/>
 
               <!-- § Contact Info (CRM) -->
               <div class="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] backdrop-blur-xl">
