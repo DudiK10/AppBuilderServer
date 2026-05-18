@@ -1057,6 +1057,17 @@
           res.className = 'hidden rounded-xl border px-4 py-3 text-sm font-medium';
         },
 
+        _postImageUpdate: function (payload) {
+          // Inject updated image URLs directly into the Expo app's ThemeContext via
+          // postMessage so the app's state is always in sync with the DB — even if the
+          // admin opens the in-app settings screen before the iframe fully reloads.
+          // ThemeContext already handles logoUri (line ~835) and bgImageUri (line ~858).
+          var frame = document.getElementById('detail-preview');
+          if (frame && frame.contentWindow) {
+            frame.contentWindow.postMessage({ type: 'UPDATE_PREVIEW', payload: payload }, '*');
+          }
+        },
+
         _syncImageHiddenFields: function () {
           // Keep image-URL hidden fields in sync with the authoritative in-memory state
           // (activeClient) immediately before every save, so a save that fires while an
@@ -1304,6 +1315,7 @@
               var hidden = document.getElementById('detail-logo-url-hidden');
               if (hidden) hidden.value = json.url;
               activeClient.logo_url = json.url;
+              Detail._postImageUpdate({ logoUri: json.url });
               var lbl = document.getElementById('detail-logo-label');
               if (lbl) lbl.textContent = '✓ הלוגו הועלה';
               var frame = document.getElementById('detail-preview');
@@ -1337,6 +1349,7 @@
             var json = await r.json().catch(function () { return {}; });
             if (r.ok && json.status === 'success') {
               activeClient.logo_url = null;
+              Detail._postImageUpdate({ logoUri: '' });
               Detail._loadLogoPreview(null);
               var lbl = document.getElementById('detail-logo-label');
               if (lbl) lbl.textContent = 'העלה לוגו (PNG / JPG)';
@@ -1423,6 +1436,7 @@
               var hidden = document.getElementById('detail-bg-image-url-hidden');
               if (hidden) hidden.value = json.url;
               activeClient.bg_image_url = json.url;
+              Detail._postImageUpdate({ bgImageUri: json.url });
               var lbl = document.getElementById('detail-bg-label');
               if (lbl) lbl.textContent = '✓ הרקע הועלה';
               var frame = document.getElementById('detail-preview');
@@ -1456,6 +1470,7 @@
             var json = await r.json().catch(function () { return {}; });
             if (r.ok && json.status === 'success') {
               activeClient.bg_image_url = null;
+              Detail._postImageUpdate({ bgImageUri: '' });
               Detail._loadBgPreview(null);
               var lbl = document.getElementById('detail-bg-label');
               if (lbl) lbl.textContent = 'העלה תמונת רקע (JPG / PNG)';
