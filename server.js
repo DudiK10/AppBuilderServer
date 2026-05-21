@@ -1777,8 +1777,8 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
-// SPA catch-all: /app/* routes that don't match a file return the Expo app's index.html
-app.get('/app/*', (_req, res) => {
+// SPA catch-all: /app/... routes that don't match a static file return the Expo app shell
+app.get(/^\/app(\/.*)?$/, (_req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'app', 'index.html'));
 });
 
