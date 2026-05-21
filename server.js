@@ -23,6 +23,9 @@ const CLIENT_LOGOS_DIR = path.join(__dirname, 'public', 'client-logos');
 // Per-tenant background image store
 const CLIENT_BACKGROUNDS_DIR = path.join(__dirname, 'public', 'client-backgrounds');
 
+// Per-tenant gallery image store
+const CLIENT_GALLERIES_DIR = path.join(__dirname, 'public', 'client-galleries');
+
 const PORT = Number(process.env.PORT) || 3000;
 
 // Public base URL for generating absolute asset URLs (used in logo_url saved to DB).
@@ -64,6 +67,11 @@ const uploadBg = multer({
   storage: multer.memoryStorage(),
   limits: { fileSize: 10 * 1024 * 1024 },
 }).single('bg_image');
+
+const uploadGalleryItem = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+}).single('gallery_image');
 
 function isImageMime(m) {
   return typeof m === 'string' && m.startsWith('image/');
@@ -144,8 +152,9 @@ app.use(cookieParser());
 function requireAuth(req, res, next) {
   const PUBLIC = ['/login', '/logout', '/auth/status', '/config'];
   if (PUBLIC.includes(req.path)) return next();
-  // Logo and background are loaded by the Expo app (no admin session) — must be public
+  // Logo, background, and gallery images are loaded by the Expo app — must be public
   if (req.method === 'GET' && /^\/clients\/[^/]+\/(logo|background)$/.test(req.path)) return next();
+  if (req.method === 'GET' && /^\/clients\/[^/]+\/gallery(\/[^/]+)?$/.test(req.path)) return next();
   const token = req.cookies.authToken;
   if (!token) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
   try {
@@ -157,6 +166,13 @@ function requireAuth(req, res, next) {
   }
 }
 app.use('/api', requireAuth);
+
+// Pre-auth probe — fires for every /api/clients/*/gallery* request so we can confirm
+// the request reaches Node.js regardless of auth outcome.
+app.use('/api/clients/:id/gallery', (req, _res, next) => {
+  console.log(`[gallery PROBE] ${req.method} /api/clients/${req.params.id}/gallery${req.path === '/' ? '' : req.path} — content-type: ${req.headers['content-type'] || 'none'}`);
+  next();
+});
 
 // ─── Auth routes ──────────────────────────────────────────────────────────────
 app.post('/api/login', (req, res) => {
@@ -194,6 +210,39 @@ app.get('/api/auth/status', (req, res) => {
 
 const PHP_API_BASE = (process.env.PHP_API_BASE || '').replace(/\/$/, '');
 const ADMIN_API_TOKEN = process.env.ADMIN_API_TOKEN || '';
+
+/**
+ * Fire-and-forget sync of image URLs from the Node.js DB to the PHP DB.
+ *
+ * Node.js (builder.manageapp.in) and PHP (manageapp.in) run on separate
+ * servers with separate MySQL instances.  Any write to the Node.js DB is
+ * invisible to PHP's get_business_config.php — so after a dashboard upload
+ * the Expo app's refreshFromApi() still returns bgImageUri: null and the
+ * preview clears the background.
+ *
+ * This helper calls update_business_config.php (PHP-side DB) whenever
+ * logo_url or bg_image_url changes, keeping both DBs in sync.
+ *
+ * `fields` example: { logoUri: 'https://...' } or { bgImageUri: null }
+ */
+async function syncImageUrlsToPhp(tenantId, fields) {
+  if (!PHP_API_BASE || !ADMIN_API_TOKEN) return;
+  try {
+    const r = await fetch(`${PHP_API_BASE}/update_business_config.php`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        Authorization: `Bearer ${ADMIN_API_TOKEN}`,
+      },
+      body: JSON.stringify({ tenant_id: tenantId, ...fields }),
+    });
+    const text = await r.text();
+    console.log(`[syncImageUrlsToPhp] tenant=${tenantId} fields=${JSON.stringify(fields)} status=${r.status} body=${text.slice(0, 120)}`);
+  } catch (e) {
+    console.error('[syncImageUrlsToPhp] fetch error:', e.message);
+  }
+}
 
 async function proxyPhpScript(scriptName, req, res) {
   if (!PHP_API_BASE || !ADMIN_API_TOKEN) {
@@ -1210,6 +1259,7 @@ app.post('/api/clients/:id/logo', uploadLogo, async (req, res) => {
   }
 
   console.log(`[logo upload] tenant=${tenantId} url=${publicUrl}`);
+  void syncImageUrlsToPhp(tenantId, { logoUri: publicUrl });
   res.json({ status: 'success', url: publicUrl });
 });
 
@@ -1247,6 +1297,7 @@ app.delete('/api/clients/:id/logo', async (req, res) => {
   }
 
   console.log(`[logo delete] tenant=${tenantId}`);
+  void syncImageUrlsToPhp(tenantId, { logoUri: null });
   res.json({ status: 'success' });
 });
 
@@ -1280,6 +1331,7 @@ app.post('/api/clients/:id/background', uploadBg, async (req, res) => {
   }
 
   console.log(`[bg upload] tenant=${tenantId} url=${publicUrl}`);
+  void syncImageUrlsToPhp(tenantId, { bgImageUri: publicUrl });
   res.json({ status: 'success', url: publicUrl });
 });
 
@@ -1315,7 +1367,121 @@ app.delete('/api/clients/:id/background', async (req, res) => {
   }
 
   console.log(`[bg delete] tenant=${tenantId}`);
+  void syncImageUrlsToPhp(tenantId, { bgImageUri: null });
   res.json({ status: 'success' });
+});
+
+// ─── Gallery image endpoints ───────────────────────────────────────────────────
+
+function getGalleryUrls(tenantId) {
+  const dir = path.join(CLIENT_GALLERIES_DIR, tenantId);
+  if (!fs.existsSync(dir)) return [];
+  const imageExts = /\.(jpe?g|png|gif|webp|bmp)$/i;
+  return fs.readdirSync(dir)
+    .filter((f) => imageExts.test(f))
+    .sort()
+    .map((f) => `${SERVER_BASE_URL}/api/clients/${encodeURIComponent(tenantId)}/gallery/${encodeURIComponent(f)}`);
+}
+
+app.post('/api/clients/:id/gallery', uploadGalleryItem, async (req, res) => {
+  const tenantId = String(req.params.id).trim();
+  console.log(`[gallery upload] STEP 1 — request received tenant=${tenantId} contentType=${req.headers['content-type']}`);
+
+  if (!tenantId) return res.status(400).json({ status: 'error', message: 'tenant_id required' });
+
+  const file = req.file;
+  console.log(`[gallery upload] STEP 2 — req.file:`, file
+    ? `fieldname=${file.fieldname} mimetype=${file.mimetype} size=${file.size}`
+    : 'MISSING (multer did not parse a file)');
+
+  if (!file) return res.status(400).json({ status: 'error', message: 'No file uploaded — multer found no field named "gallery_image"' });
+  if (!isImageMime(file.mimetype)) {
+    console.error(`[gallery upload] STEP 2 FAIL — not an image: ${file.mimetype}`);
+    return res.status(400).json({ status: 'error', message: `File must be an image (got ${file.mimetype})` });
+  }
+
+  const ext = extForImage(file);
+  const dir = path.join(CLIENT_GALLERIES_DIR, tenantId);
+  console.log(`[gallery upload] STEP 3 — writing to dir: ${dir}`);
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+  } catch (e) {
+    console.error('[gallery upload] STEP 3 FAIL — mkdirSync:', e.message);
+    return res.status(500).json({ status: 'error', message: `Cannot create gallery dir: ${e.message}` });
+  }
+
+  const filename = `${Date.now()}${ext}`;
+  try {
+    fs.writeFileSync(path.join(dir, filename), file.buffer);
+    console.log(`[gallery upload] STEP 3 OK — wrote ${filename} (${file.buffer.length} bytes)`);
+  } catch (e) {
+    console.error('[gallery upload] STEP 3 FAIL — writeFileSync:', e.message);
+    return res.status(500).json({ status: 'error', message: `Cannot write file: ${e.message}` });
+  }
+
+  const urls = getGalleryUrls(tenantId);
+  console.log(`[gallery upload] STEP 4 — gallery list after write (${urls.length} items):`, urls);
+
+  try {
+    await pool.query(
+      'UPDATE businesses SET gallery_uris = ?, updated_at = NOW() WHERE tenant_id = ?',
+      [JSON.stringify(urls), tenantId]
+    );
+    console.log(`[gallery upload] STEP 5 OK — DB updated gallery_uris for tenant=${tenantId}`);
+  } catch (e) {
+    console.error('[gallery upload] STEP 5 FAIL — DB update:', e.message);
+    return res.status(500).json({ status: 'error', message: `DB update failed: ${e.message}` });
+  }
+
+  const responseUrl = `${SERVER_BASE_URL}/api/clients/${encodeURIComponent(tenantId)}/gallery/${encodeURIComponent(filename)}`;
+  console.log(`[gallery upload] DONE — returning success url=${responseUrl}`);
+  res.json({ status: 'success', url: responseUrl, urls });
+});
+
+app.get('/api/clients/:id/gallery', (req, res) => {
+  const tenantId = String(req.params.id).trim();
+  if (!tenantId) return res.status(400).json({ status: 'error', message: 'tenant_id required' });
+  res.json({ status: 'success', urls: getGalleryUrls(tenantId) });
+});
+
+app.get('/api/clients/:id/gallery/:filename', (req, res) => {
+  const tenantId = String(req.params.id).trim();
+  const filename = path.basename(String(req.params.filename).trim());
+  if (!tenantId || !filename) return res.status(400).end();
+  const fpath = path.join(CLIENT_GALLERIES_DIR, tenantId, filename);
+  if (!fs.existsSync(fpath)) return res.status(404).end();
+  res.setHeader('Cache-Control', 'no-cache');
+  res.sendFile(fpath);
+});
+
+app.delete('/api/clients/:id/gallery/:filename', async (req, res) => {
+  const tenantId = String(req.params.id).trim();
+  const filename = path.basename(String(req.params.filename).trim());
+  if (!tenantId || !filename) return res.status(400).json({ status: 'error', message: 'tenant_id and filename required' });
+
+  const fpath = path.join(CLIENT_GALLERIES_DIR, tenantId, filename);
+  try {
+    if (fs.existsSync(fpath)) fs.unlinkSync(fpath);
+  } catch (e) {
+    console.error('[gallery delete]', e);
+    return res.status(500).json({ status: 'error', message: e.message });
+  }
+
+  const urls = getGalleryUrls(tenantId);
+
+  // Write directly to the shared MySQL DB — same authoritative write as the upload route.
+  try {
+    await pool.query(
+      'UPDATE businesses SET gallery_uris = ?, updated_at = NOW() WHERE tenant_id = ?',
+      [urls.length > 0 ? JSON.stringify(urls) : null, tenantId]
+    );
+  } catch (e) {
+    console.error('[gallery delete] db update failed:', e);
+    return res.status(500).json({ status: 'error', message: e.message });
+  }
+
+  console.log(`[gallery delete] tenant=${tenantId} file=${filename} remaining=${urls.length}`);
+  res.json({ status: 'success', urls });
 });
 
 // ─── Icon endpoints ────────────────────────────────────────────────────────────
@@ -1417,6 +1583,11 @@ app.put('/api/clients/:id', async (req, res) => {
     );
     if (result.affectedRows === 0) return res.status(404).json({ status: 'error', message: 'Business not found' });
     console.log(`[PUT /api/clients/${tenantId}] rows=${result.affectedRows}`);
+    // Sync image URLs to the PHP-side DB so get_business_config.php sees the latest values
+    const phpFields = {};
+    if (ns(body.logo_url)     !== undefined) phpFields.logoUri    = ns(body.logo_url);
+    if (ns(body.bg_image_url) !== undefined) phpFields.bgImageUri = ns(body.bg_image_url);
+    if (Object.keys(phpFields).length > 0) void syncImageUrlsToPhp(tenantId, phpFields);
     res.json({ status: 'success', message: 'Updated successfully' });
   } catch (e) {
     console.error('[PUT /api/clients]', e);
@@ -1607,6 +1778,8 @@ app.use((err, req, res, next) => {
 const server = app.listen(PORT, () => {
   console.log(`App Builder server listening on http://localhost:${PORT}`);
   console.log(`Expo project path: ${EXPO_PROJECT_PATH}`);
+  console.log(`[gallery] CLIENT_GALLERIES_DIR: ${CLIENT_GALLERIES_DIR}`);
+  console.log('[gallery] Routes registered: POST/GET/DELETE /api/clients/:id/gallery and GET /api/clients/:id/gallery/:filename');
   runMigrations().catch((e) => console.error('[migration] failed:', e));
 });
 
