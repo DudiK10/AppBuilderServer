@@ -1387,56 +1387,79 @@ function getGalleryUrls(tenantId) {
 
 app.post('/api/clients/:id/gallery', uploadGalleryItem, async (req, res) => {
   const tenantId = String(req.params.id).trim();
-  console.log(`[gallery upload] STEP 1 — request received tenant=${tenantId} contentType=${req.headers['content-type']}`);
+
+  console.log('[gallery upload] ═══════════════════════════════════════');
+  console.log('[gallery upload] STEP 1 — route hit');
+  console.log('[gallery upload] req.params :', JSON.stringify(req.params));
+  console.log('[gallery upload] content-type:', req.headers['content-type'] ?? '(missing)');
+  console.log('[gallery upload] cookie     :', req.headers.cookie ?? '(none — auth cookie absent)');
+  console.log('[gallery upload] origin     :', req.headers.origin ?? '(none)');
+  console.log('[gallery upload] referer    :', req.headers.referer ?? '(none)');
 
   if (!tenantId) return res.status(400).json({ status: 'error', message: 'tenant_id required' });
 
   const file = req.file;
-  console.log(`[gallery upload] STEP 2 — req.file:`, file
-    ? `fieldname=${file.fieldname} mimetype=${file.mimetype} size=${file.size}`
-    : 'MISSING (multer did not parse a file)');
+  if (file) {
+    console.log('[gallery upload] STEP 2 — multer file OK');
+    console.log('  fieldname :', file.fieldname);
+    console.log('  originalname:', file.originalname);
+    console.log('  mimetype  :', file.mimetype);
+    console.log('  size      :', file.size, 'bytes');
+    console.log('  buffer OK :', Buffer.isBuffer(file.buffer), '— length:', file.buffer?.length ?? 'N/A');
+  } else {
+    console.error('[gallery upload] STEP 2 FAIL — req.file is undefined (multer found no "gallery_image" field)');
+    console.log('[gallery upload] req.files :', JSON.stringify(req.files ?? null));
+    console.log('[gallery upload] req.body  :', JSON.stringify(req.body ?? null));
+    return res.status(400).json({ status: 'error', message: 'No file uploaded — multer found no field named "gallery_image"' });
+  }
 
-  if (!file) return res.status(400).json({ status: 'error', message: 'No file uploaded — multer found no field named "gallery_image"' });
   if (!isImageMime(file.mimetype)) {
-    console.error(`[gallery upload] STEP 2 FAIL — not an image: ${file.mimetype}`);
+    console.error('[gallery upload] STEP 2 FAIL — not an image mimetype:', file.mimetype);
     return res.status(400).json({ status: 'error', message: `File must be an image (got ${file.mimetype})` });
   }
 
   const ext = extForImage(file);
   const dir = path.join(CLIENT_GALLERIES_DIR, tenantId);
-  console.log(`[gallery upload] STEP 3 — writing to dir: ${dir}`);
+  console.log('[gallery upload] STEP 3 — target dir:', dir);
   try {
     fs.mkdirSync(dir, { recursive: true });
+    console.log('[gallery upload] STEP 3 — dir ready');
   } catch (e) {
     console.error('[gallery upload] STEP 3 FAIL — mkdirSync:', e.message);
     return res.status(500).json({ status: 'error', message: `Cannot create gallery dir: ${e.message}` });
   }
 
   const filename = `${Date.now()}${ext}`;
+  const filePath = path.join(dir, filename);
   try {
-    fs.writeFileSync(path.join(dir, filename), file.buffer);
-    console.log(`[gallery upload] STEP 3 OK — wrote ${filename} (${file.buffer.length} bytes)`);
+    fs.writeFileSync(filePath, file.buffer);
+    console.log('[gallery upload] STEP 3 OK — wrote:', filePath, '(', file.buffer.length, 'bytes)');
   } catch (e) {
     console.error('[gallery upload] STEP 3 FAIL — writeFileSync:', e.message);
     return res.status(500).json({ status: 'error', message: `Cannot write file: ${e.message}` });
   }
 
   const urls = getGalleryUrls(tenantId);
-  console.log(`[gallery upload] STEP 4 — gallery list after write (${urls.length} items):`, urls);
+  console.log('[gallery upload] STEP 4 — gallery URLs after write (', urls.length, 'total):', urls);
 
+  const sqlQuery = 'UPDATE businesses SET gallery_uris = ?, updated_at = NOW() WHERE tenant_id = ?';
+  const sqlValues = [JSON.stringify(urls), tenantId];
+  console.log('[gallery upload] STEP 5 — SQL:', sqlQuery);
+  console.log('[gallery upload] STEP 5 — values:', sqlValues[0], '|', sqlValues[1]);
   try {
-    await pool.query(
-      'UPDATE businesses SET gallery_uris = ?, updated_at = NOW() WHERE tenant_id = ?',
-      [JSON.stringify(urls), tenantId]
-    );
-    console.log(`[gallery upload] STEP 5 OK — DB updated gallery_uris for tenant=${tenantId}`);
+    const [dbResult] = await pool.query(sqlQuery, sqlValues);
+    console.log('[gallery upload] STEP 5 OK — affectedRows:', dbResult.affectedRows, '| changedRows:', dbResult.changedRows);
+    if (dbResult.affectedRows === 0) {
+      console.warn('[gallery upload] STEP 5 WARN — 0 rows affected: tenant_id "' + tenantId + '" may not exist in businesses table');
+    }
   } catch (e) {
-    console.error('[gallery upload] STEP 5 FAIL — DB update:', e.message);
+    console.error('[gallery upload] STEP 5 FAIL — DB error:', e.message);
     return res.status(500).json({ status: 'error', message: `DB update failed: ${e.message}` });
   }
 
   const responseUrl = `${SERVER_BASE_URL}/api/clients/${encodeURIComponent(tenantId)}/gallery/${encodeURIComponent(filename)}`;
-  console.log(`[gallery upload] DONE — returning success url=${responseUrl}`);
+  console.log('[gallery upload] DONE ✓ — responseUrl:', responseUrl);
+  console.log('[gallery upload] ═══════════════════════════════════════');
   res.json({ status: 'success', url: responseUrl, urls });
 });
 
