@@ -155,7 +155,7 @@ function requireAuth(req, res, next) {
   // Logo, background, and gallery images are loaded by the Expo app — must be public
   if (req.method === 'GET' && /^\/clients\/[^/]+\/(logo|background)$/.test(req.path)) return next();
   if (req.method === 'GET' && /^\/clients\/[^/]+\/gallery(\/[^/]+)?$/.test(req.path)) return next();
-  // Gallery upload and delete are called from the React app (which uses PHP auth, not builder cookies)
+  // Gallery write ops are called from the React app - open auth so uploads reach the Node handler
   if (/^\/clients\/[^/]+\/gallery(\/[^/]+)?$/.test(req.path)) return next();
   const token = req.cookies.authToken;
   if (!token) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
