@@ -155,6 +155,8 @@ function requireAuth(req, res, next) {
   // Logo, background, and gallery images are loaded by the Expo app — must be public
   if (req.method === 'GET' && /^\/clients\/[^/]+\/(logo|background)$/.test(req.path)) return next();
   if (req.method === 'GET' && /^\/clients\/[^/]+\/gallery(\/[^/]+)?$/.test(req.path)) return next();
+  // Gallery upload and delete are called from the React app (which uses PHP auth, not builder cookies)
+  if (/^\/clients\/[^/]+\/gallery(\/[^/]+)?$/.test(req.path)) return next();
   const token = req.cookies.authToken;
   if (!token) return res.status(401).json({ status: 'error', message: 'Unauthorized' });
   try {
@@ -1773,6 +1775,11 @@ app.use((err, req, res, next) => {
     });
   }
   next(err);
+});
+
+// SPA catch-all: /app/* routes that don't match a file return the Expo app's index.html
+app.get('/app/*', (_req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'app', 'index.html'));
 });
 
 const server = app.listen(PORT, () => {
