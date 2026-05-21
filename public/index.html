@@ -1532,7 +1532,7 @@
           if (!activeClient) return;
           var lbl = document.getElementById('detail-gallery-label');
           try {
-            var r = await fetch('/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery');
+            var r = await fetch('https://builder.manageapp.in/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery', { credentials: 'include' });
             var json = await r.json().catch(function () { return {}; });
             if (r.ok && json.status === 'success') {
               activeClient.gallery_uris = json.urls;
@@ -1560,12 +1560,12 @@
 
           var lbl = document.getElementById('detail-gallery-label');
           if (lbl) lbl.textContent = 'מעלה...';
-          var url = '/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery';
+          var url = 'https://builder.manageapp.in/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery';
           console.log('[Gallery] POSTing to', url);
           var formData = new FormData();
           formData.append('gallery_image', file);
           try {
-            var res = await fetch(url, { method: 'POST', body: formData });
+            var res = await fetch(url, { method: 'POST', body: formData, credentials: 'include' });
             console.log('[Gallery] server responded', res.status);
             var json = await res.json().catch(function () { return {}; });
             if (res.ok && json.status === 'success') {
@@ -1592,8 +1592,8 @@
           var filename = decodeURIComponent(url.split('/').pop().split('?')[0]);
           try {
             var r = await fetch(
-              '/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery/' + encodeURIComponent(filename),
-              { method: 'DELETE' }
+              'https://builder.manageapp.in/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery/' + encodeURIComponent(filename),
+              { method: 'DELETE', credentials: 'include' }
             );
             var json = await r.json().catch(function () { return {}; });
             if (r.ok && json.status === 'success') {
