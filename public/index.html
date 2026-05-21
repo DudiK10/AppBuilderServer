@@ -623,6 +623,25 @@
                       </label>
                     </div>
                   </div>
+                  <!-- § Gallery images -->
+                  <div>
+                    <p class="mb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      גלריית תמונות
+                      <span class="normal-case font-normal text-slate-600"> — JPG / PNG</span>
+                    </p>
+                    <div id="detail-gallery-grid" class="mb-3 flex flex-wrap gap-2"></div>
+                    <!-- input lives outside any <label> to guarantee onchange fires -->
+                    <input type="file" id="detail-gallery-input"
+                           accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+                           style="display:none"
+                           onchange="Detail.onGallerySelect(this)"/>
+                    <button type="button" id="detail-gallery-btn"
+                            onclick="document.getElementById('detail-gallery-input').click()"
+                            class="flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 bg-white/[0.02] px-4 py-3 text-xs text-slate-400 transition hover:border-indigo-500/40 hover:bg-indigo-500/5 hover:text-indigo-300">
+                      <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                      <span id="detail-gallery-label">הוסף תמונה לגלריה</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -1009,6 +1028,7 @@
           Detail._loadIconPreview(activeClient.tenant_id);
           Detail._loadLogoPreview(activeClient.logo_url);
           Detail._loadBgPreview(activeClient.bg_image_url);
+          Detail._fetchAndLoadGallery();
           var iconInput = document.getElementById('detail-icon-input');
           if (iconInput) iconInput.value = '';
           var iconLbl = document.getElementById('detail-icon-label');
@@ -1485,6 +1505,110 @@
           }
         },
 
+        _loadGalleryGrid: function (urls) {
+          var grid = document.getElementById('detail-gallery-grid');
+          if (!grid) return;
+          grid.innerHTML = '';
+          (urls || []).forEach(function (url) {
+            var item = document.createElement('div');
+            item.style.cssText = 'position:relative;width:72px;height:72px;flex-shrink:0;';
+            var img = document.createElement('img');
+            img.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cb=' + Date.now();
+            img.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.1);';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.title = 'הסר תמונה';
+            btn.style.cssText = 'position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(239,68,68,0.9);color:#fff;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;line-height:1;';
+            btn.textContent = '✕';
+            var captured = url;
+            btn.addEventListener('click', function () { Detail.removeGalleryImage(captured); });
+            item.appendChild(img);
+            item.appendChild(btn);
+            grid.appendChild(item);
+          });
+        },
+
+        _fetchAndLoadGallery: async function () {
+          if (!activeClient) return;
+          var lbl = document.getElementById('detail-gallery-label');
+          try {
+            var r = await fetch('/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery');
+            var json = await r.json().catch(function () { return {}; });
+            if (r.ok && json.status === 'success') {
+              activeClient.gallery_uris = json.urls;
+              Detail._loadGalleryGrid(json.urls);
+            }
+          } catch (_) { /* non-critical */ }
+          if (lbl) lbl.textContent = 'הוסף תמונה לגלריה';
+        },
+
+        onGallerySelect: async function (input) {
+          var file = input.files && input.files[0];
+          console.log('[Gallery] onGallerySelect fired — file:', file ? (file.name + ' type=' + (file.type || '(empty)') + ' size=' + file.size) : 'none');
+          if (!file) return;
+
+          // file.type is empty on many Windows systems even for valid images — use
+          // extension as the authoritative check when the browser leaves type blank.
+          var ext = (file.name || '').split('.').pop().toLowerCase();
+          var validExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
+          var typeOk = file.type.startsWith('image/') || validExts.indexOf(ext) !== -1;
+          if (!typeOk) {
+            Detail.showResult('error', '✗ יש לבחור קובץ תמונה (jpg / png)');
+            input.value = '';
+            return;
+          }
+
+          var lbl = document.getElementById('detail-gallery-label');
+          if (lbl) lbl.textContent = 'מעלה...';
+          var url = '/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery';
+          console.log('[Gallery] POSTing to', url);
+          var formData = new FormData();
+          formData.append('gallery_image', file);
+          try {
+            var res = await fetch(url, { method: 'POST', body: formData });
+            console.log('[Gallery] server responded', res.status);
+            var json = await res.json().catch(function () { return {}; });
+            if (res.ok && json.status === 'success') {
+              activeClient.gallery_uris = json.urls;
+              Detail._loadGalleryGrid(json.urls);
+              Detail._postImageUpdate({ galleryUris: json.urls });
+              Detail.showResult('success', '✓ התמונה נוספה לגלריה');
+            } else {
+              console.warn('[Gallery] upload error response:', json);
+              Detail.showResult('error', '✗ ' + (json.message || 'שגיאה בהעלאה'));
+            }
+          } catch (err) {
+            console.error('[Gallery] fetch exception:', err);
+            Detail.showResult('error', '✗ שגיאת רשת בהעלאת תמונת גלריה');
+          } finally {
+            input.value = '';
+            if (lbl) lbl.textContent = 'הוסף תמונה לגלריה';
+          }
+        },
+
+        removeGalleryImage: async function (url) {
+          if (!activeClient) return;
+          if (!confirm('להסיר תמונה זו מהגלריה?')) return;
+          var filename = decodeURIComponent(url.split('/').pop().split('?')[0]);
+          try {
+            var r = await fetch(
+              '/api/clients/' + encodeURIComponent(activeClient.tenant_id) + '/gallery/' + encodeURIComponent(filename),
+              { method: 'DELETE' }
+            );
+            var json = await r.json().catch(function () { return {}; });
+            if (r.ok && json.status === 'success') {
+              activeClient.gallery_uris = json.urls;
+              Detail._loadGalleryGrid(json.urls);
+              Detail._postImageUpdate({ galleryUris: json.urls });
+              Detail.showResult('success', '✓ התמונה הוסרה מהגלריה');
+            } else {
+              Detail.showResult('error', '✗ ' + (json.message || 'שגיאה בהסרה'));
+            }
+          } catch (_) {
+            Detail.showResult('error', '✗ שגיאת רשת בהסרת תמונת גלריה');
+          }
+        },
+
         showResult: function (type, msg) {
           var el = document.getElementById('detail-result');
           el.className = 'rounded-xl border px-4 py-3 text-sm font-medium ' + (
@@ -1608,6 +1732,7 @@
       document.getElementById('modal-new-client').addEventListener('click', function (e) {
         if (e.target === this) NewClient.close();
       });
+
 
       // ════════════════════════════════════════════════════════════
       //  BUILDER LOGIC  (preserved exactly)
