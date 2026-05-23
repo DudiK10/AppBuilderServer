@@ -213,12 +213,12 @@
                     <div class="space-y-4 bg-[#0d1017] p-5">
                       <div>
                         <label for="appName" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">שם האפליקציה</label>
-                        <input id="appName" name="appName" type="text" required placeholder="לדוגמה: מספרה דוד"
+                        <input id="appName" name="appName" type="text" required placeholder="לדוגמה: העסק של דוד"
                           class="w-full rounded-xl border border-white/8 bg-[#131722] px-4 py-3 text-sm text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"/>
                       </div>
                       <div>
                         <label for="businessNameInput" class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">שם העסק (לתצוגה ללא לוגו)</label>
-                        <input id="businessNameInput" name="businessName" type="text" placeholder="לדוגמה: מספרת דודי"
+                        <input id="businessNameInput" name="businessName" type="text" placeholder="לדוגמה: העסק של דודי"
                           class="w-full rounded-xl border border-white/8 bg-[#131722] px-4 py-3 text-sm text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"/>
                       </div>
                       <div class="grid grid-cols-2 gap-4">
@@ -238,7 +238,7 @@
                         <div class="relative">
                           <select id="businessType" name="businessType" required
                             class="w-full cursor-pointer appearance-none rounded-xl border border-white/8 bg-[#131722] py-3 pl-10 pr-4 text-sm text-slate-100 outline-none transition-all focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10">
-                            <option value="barber">מספרה (Barbershop)</option>
+                            <option value="barber">עסק כללי (General)</option>
                             <option value="cosmetician">קליניקת קוסמטיקה</option>
                           </select>
                           <span class="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
@@ -492,7 +492,7 @@
                   </div>
                   <div>
                     <label class="mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-500">מילות מפתח (Keywords, מופרדות בפסיק)</label>
-                    <input name="keywords" type="text" dir="ltr" placeholder="barber, hair, salon, tel aviv"
+                    <input name="keywords" type="text" dir="ltr" placeholder="beauty, wellness, booking, tel aviv"
                       class="w-full rounded-xl border border-white/8 bg-[#131722] px-4 py-3 font-mono text-sm text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"/>
                   </div>
                 </div>
@@ -707,7 +707,7 @@
               </div>
             </div>
             <p class="mt-6 text-center text-xs leading-relaxed text-slate-600">
-              <span class="font-mono text-slate-500">manageapp.in/preview</span>
+              <span class="font-mono text-slate-500">builder.manageapp.in/app/</span>
             </p>
           </div>
 
@@ -753,7 +753,7 @@
               </div>
               <div>
                 <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">שם העסק</label>
-                <input name="business_name" type="text" placeholder="מספרת דודי"
+                <input name="business_name" type="text" placeholder="העסק של דודי"
                   class="w-full rounded-xl border border-white/8 bg-[#0d1017] px-4 py-2.5 text-sm text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"/>
               </div>
               <div>
@@ -792,7 +792,7 @@
               </div>
               <div>
                 <label class="mb-1.5 block text-xs font-semibold uppercase tracking-wider text-slate-500">מילות מפתח</label>
-                <input name="keywords" type="text" dir="ltr" placeholder="barber, hair, salon, booking"
+                <input name="keywords" type="text" dir="ltr" placeholder="beauty, wellness, salon, booking"
                   class="w-full rounded-xl border border-white/8 bg-[#0d1017] px-4 py-2.5 font-mono text-sm text-slate-100 outline-none transition-all placeholder:text-slate-600 focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10"/>
               </div>
             </div>
@@ -864,7 +864,7 @@
     (function () {
 
       // ── Preview base URL (overridden by /api/config) ──────────
-      var PREVIEW_URL = 'https://manageapp.in/preview';
+      var PREVIEW_URL = '/app/';
 
       // ── Helpers ────────────────────────────────────────────────
       function esc(s) {
@@ -904,7 +904,7 @@
       // ── Badge helpers ──────────────────────────────────────────
       function typeBadge(type) {
         var map = {
-          barber:      ['מספרה',    'bg-sky-500/15 text-sky-400 ring-1 ring-sky-500/20'],
+          barber:      ['עסק כללי', 'bg-sky-500/15 text-sky-400 ring-1 ring-sky-500/20'],
           cosmetician: ['קוסמטיקה', 'bg-rose-500/15 text-rose-400 ring-1 ring-rose-500/20'],
         };
         var p = map[type] || [esc(type || '—'), 'bg-slate-500/15 text-slate-400'];
@@ -1064,7 +1064,7 @@
           set('logo_url',               c.logo_url);
           set('bg_image_url',           c.bg_image_url);
           set('bg_blur_intensity',      c.bg_blur_intensity != null ? c.bg_blur_intensity : 22);
-          set('business_type',          c.business_type || 'barber');
+          set('business_type',          c.business_type || 'general');
           set('about_us_text',          c.about_us_text);
           set('business_phone',         c.business_phone);
           set('business_address',       c.business_address);
@@ -1201,7 +1201,7 @@
             formData.append('appName',      data.business_name || activeClient.tenant_id);
             formData.append('businessName', data.business_name || activeClient.tenant_id);
             formData.append('brandPreset',  data.brand_preset  || 'classic_modern');
-            formData.append('businessType', 'barber');
+            formData.append('businessType', 'general');
             var safeTenant = (activeClient.tenant_id || '').replace(/[^a-z0-9]/gi, '').toLowerCase();
             formData.append('bundleId', 'com.appfactory.' + safeTenant);
             if (iconFile) formData.append('appIcon', iconFile);

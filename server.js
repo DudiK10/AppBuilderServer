@@ -766,7 +766,7 @@ app.get('/update/:tenant_id', async (req, res) => {
 
 // ─── Client Detail View ───────────────────────────────────────────────────────
 
-app.get('/client/:tenant_id', (req, res) => res.redirect('/'));
+app.get('/client/:tenant_id', (req, res) => res.redirect(`/update/${req.params.tenant_id}`));
 if (false) (async (req, res) => {  // legacy — SPA handles this now
   const tenantId = String(req.params.tenant_id).trim();
   let business = null;
@@ -790,7 +790,7 @@ if (false) (async (req, res) => {  // legacy — SPA handles this now
   const displayName = escape(b.business_name || tenantId);
 
   const BRAND_PRESETS = ['classic_modern', 'premium_dark', 'beauty_nude'];
-  const BUSINESS_TYPES = ['barber', 'cosmetician'];
+  const BUSINESS_TYPES = ['barber', 'cosmetician', 'massage', 'nails', 'physiotherapy', 'general'];
 
   function opt(arr, current, labels = {}) {
     return arr.map(v => `<option value="${v}"${v === current ? ' selected' : ''}>${labels[v] || v}</option>`).join('');
@@ -858,7 +858,7 @@ if (false) (async (req, res) => {  // legacy — SPA handles this now
             <div>
               <label class="mb-1.5 block text-xs font-semibold text-slate-400">סוג עסק</label>
               <select name="business_type" class="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-slate-100 outline-none transition focus:border-indigo-500/60 focus:ring-4 focus:ring-indigo-500/10">
-                ${opt(BUSINESS_TYPES, b.business_type, { barber: 'מספרה (Barber)', cosmetician: 'קוסמטיקה (Cosmetician)' })}
+                ${opt(BUSINESS_TYPES, b.business_type, { barber: 'מספרה / ספר', cosmetician: 'קוסמטיקה', massage: 'עיסוי', nails: 'ציפורניים / נייליסטית', physiotherapy: 'פיזיותרפיה', general: 'עסק כללי' })}
               </select>
             </div>
           </div>
@@ -994,7 +994,8 @@ if (false) (async (req, res) => {  // legacy — SPA handles this now
             <!-- Screen: live iframe -->
             <div class="h-full w-full overflow-hidden rounded-[2.5rem] bg-black">
               <iframe
-                src="https://manageapp.in/preview"
+                id="preview-frame"
+                src="/app/?tenant_id=${tenantSafe}"
                 class="h-full w-full border-0"
                 title="Live App Preview"
                 allow="cross-origin-isolated"
@@ -1007,7 +1008,7 @@ if (false) (async (req, res) => {  // legacy — SPA handles this now
       </div>
 
       <p class="mt-5 text-center text-xs text-slate-600 leading-relaxed">
-        מציג את <span class="font-mono text-slate-500">manageapp.in/preview</span>
+        מציג את <span class="font-mono text-slate-500">builder.manageapp.in/app/</span>
       </p>
     </div>
 
@@ -1051,6 +1052,52 @@ if (false) (async (req, res) => {  // legacy — SPA handles this now
       result.classList.remove('hidden');
     }
   });
+
+  // ── Live Preview via postMessage ────────────────────────────────────────────
+  (function () {
+    const frame = document.getElementById('preview-frame');
+
+    function getPayload() {
+      const fd = new FormData(document.getElementById('client-form'));
+      const get = k => (fd.get(k) || '').trim();
+      const val = (v) => v.length > 0 ? v : null;
+      return {
+        appName:         get('business_name') || undefined,
+        businessName:    get('business_name') || undefined,
+        businessType:    get('business_type') || undefined,
+        brandPreset:     get('brand_preset')  || undefined,
+        logoUri:         val(get('logo_url')),
+        bgImageUri:      val(get('bg_image_url')),
+        bgBlurIntensity: Number(get('bg_blur_intensity') || 22),
+        aboutUsText:     get('about_us_text'),
+        businessPhone:   val(get('business_phone')),
+        businessAddress: val(get('business_address')),
+        socialInstagram: val(get('social_instagram')),
+        socialFacebook:  val(get('social_facebook')),
+        socialTiktok:    val(get('social_tiktok')),
+        socialWebsite:   val(get('social_website')),
+        socialWhatsapp:  val(get('social_whatsapp')),
+      };
+    }
+
+    function sendPreview() {
+      if (!frame || !frame.contentWindow) return;
+      frame.contentWindow.postMessage({ type: 'UPDATE_PREVIEW', payload: getPayload() }, '*');
+    }
+
+    // Debounce: wait 300 ms after user stops typing before sending
+    let debounceTimer;
+    function sendDebounced() { clearTimeout(debounceTimer); debounceTimer = setTimeout(sendPreview, 300); }
+
+    // Fire on every keystroke / select change / slider move
+    document.getElementById('client-form').addEventListener('input',  sendDebounced);
+    document.getElementById('client-form').addEventListener('change', sendDebounced);
+
+    // Push current form state into the iframe once it finishes loading
+    frame.addEventListener('load', function () {
+      setTimeout(sendPreview, 600);
+    });
+  })();
 </script>
 </body>
 </html>`;
@@ -1110,7 +1157,7 @@ app.post('/api/client/:tenant_id/update', async (req, res) => {
       WHERE tenant_id = ?`,
       [
         nullOrStr(business_name),
-        nullOrStr(business_type) || 'barber',
+        nullOrStr(business_type) || 'general',
         nullOrStr(brand_preset) || 'classic_modern',
         nullOrStr(logo_url),
         nullOrStr(bg_image_url),
@@ -1152,7 +1199,7 @@ app.post('/api/client/:tenant_id/update', async (req, res) => {
 const PREVIEW_URL = (process.env.PREVIEW_URL || 'http://localhost:8081').replace(/\/$/, '');
 
 app.get('/api/config', (_req, res) => {
-  res.json({ previewUrl: PREVIEW_URL });
+  res.json({ previewUrl: '/app/' });
 });
 
 app.get('/api/clients', async (req, res) => {
@@ -1187,7 +1234,7 @@ app.post('/api/clients', async (req, res) => {
          created_at, updated_at)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())`,
       [
-        tenantId, ns(body.business_name), ns(body.business_type) || 'barber',
+        tenantId, ns(body.business_name), ns(body.business_type) || 'general',
         ns(body.client_name), ns(body.phone), ns(body.notes),
         ns(body.app_description_short), ns(body.app_description_long), ns(body.keywords),
         status, ns(body.brand_preset) || 'classic_modern',
@@ -1584,7 +1631,7 @@ app.put('/api/clients/:id', async (req, res) => {
     'updated_at=NOW()',
   ];
   const values = [
-    ns(body.business_name), ns(body.business_type) || 'barber',
+    ns(body.business_name), ns(body.business_type) || 'general',
     ns(body.client_name), ns(body.phone), ns(body.notes),
     ns(body.app_description_short), ns(body.app_description_long), ns(body.keywords),
     ns(body.brand_preset) || 'classic_modern',
